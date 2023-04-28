@@ -1,0 +1,173 @@
+from flask import Flask, request, jsonify, json
+import pickle
+import warnings
+warnings.filterwarnings("ignore")
+
+app = Flask(__name__)
+
+@app.route("/week3/flask", methods=["POST"])
+def prediction_model():
+
+    with open("models.pkl", "rb") as file:
+        models = pickle.load(file)
+
+    # get input data from HTTP request
+    input_data = json.loads(request.data)
+
+    # get input features for both models
+    input_features = [input_data['model1_feature1'], input_data['model1_feature2'], input_data['model1_feature3']]
+    input_features_2 = [input_data['model2_feature1'], input_data['model2_feature2'], input_data['model2_feature3']]
+
+    # normalize input features for both models
+    input_features_normalized = normalize_data(input_features, models["model1_lambda"])
+    input_features_normalized_2 = normalize_data(input_features_2, models["model2_lambda"])
+
+    # get predictions for both models
+    prediction_model1 = models["model1"].predict([input_features_normalized])[0]
+    prediction_model2 = models["model2"].predict([input_features_normalized_2])[0]
+
+    # convert predictions back to original scale
+    prediction_model1_original_scale = convert_to_original_scale(prediction_model1, models["model1_lambda"])
+    prediction_model2_original_scale = convert_to_original_scale(prediction_model2, models["model2_lambda"])
+
+    # create response object with both predictions
+    response = {
+        'model1_prediction': prediction_model1_original_scale,
+        'model2_prediction': prediction_model2_original_scale
+    }
+
+    return jsonify(response)
+
+
+def normalize_data(data, lambda_value):
+    normalized_data = []
+    for d in data:
+        if lambda_value == 0:
+            normalized_d = log(d)
+        else:
+            normalized_d = (pow(d, lambda_value) - 1) / lambda_value
+        normalized_data.append(normalized_d)
+    return normalized_data
+
+
+def convert_to_original_scale(data, lambda_value):
+    if lambda_value == 0:
+        original_data = exp(data)
+    else:
+        original_data = pow((data * lambda_value + 1), (1 / lambda_value))
+    return original_data
+
+
+
+
+
+
+
+
+
+
+    async function predict() {
+     const url = 'http://localhost:5000/week3/flask';
+     const inputUrl = 'http://localhost:5000/week3/input';
+   
+     // Fetch input from the API endpoint
+     const response = await fetch(inputUrl);
+     const input = await response.json();
+   
+     // Send input to the Flask API for prediction
+     const options = {
+       method: 'POST',
+       body: JSON.stringify(input),
+       headers: {
+         'Content-Type': 'application/json'
+       }
+     };
+     const predictionResponse = await fetch(url, options);
+     const predictions = await predictionResponse.json();
+   
+     // Display the predictions in the output boxes
+     const output1 = document.getElementById('output1');
+     output1.value = predictions['model1'];
+   
+     const output2 = document.getElementById('output2');
+     output2.value = predictions['model2'];
+   }
+   
+
+
+
+
+
+
+
+
+   <!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Model Prediction</title>
+  </head>
+  <body>
+    <h1>Weight Prediction</h1>
+    <label>Chins:</label>
+    <input type="number" id="Chins">
+    <br><br>
+    <label>Situps:</label>
+    <input type="number" id="Situps">
+    <br><br>
+    <label>Jumps:</label>
+    <input type="number" id="Jumps">
+    <br><br>
+    </select>
+    <br><br>
+    <button onclick="predictWeight()">Predict</button>
+    <br><br>
+    <label>Result:</label>
+    <p id="weightResult"></p>
+    
+    <hr>
+    
+    <h1>Waist Prediction</h1>
+    <label>Weight:</label>
+    <input type="number" id="Weight">
+    <br><br>
+    <button onclick="predictWaist()">Predict</button>
+    <br><br>
+    <label>Result:</label>
+    <p id="waistResult"></p>
+    
+    <script>
+      function predictWeight() {
+        const Chins = document.getElementById("Chins").value;
+        const Situps = document.getElementById("Situps").value;
+        const Jumps = document.getElementById("Jumps").value;
+        const data = {Chins: Chins, Situps: Situps, Jumps: Jumps};
+        const xhr = new XMLHttpRequest();
+        xhr.open("POST", "http://127.0.0.1:5000/week3/flask", true);
+        xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+        xhr.onreadystatechange = function() {
+          if (xhr.readyState === 4 && xhr.status === 200) {
+            const result = JSON.parse(xhr.responseText).prediction;
+            document.getElementById("weightResult").innerHTML = result;
+          }
+        };
+        xhr.send(JSON.stringify(data));
+      }
+      
+      function predictWaist() {
+        const Weight = document.getElementById("Weight").value;
+        const data = {Weight: Weight};
+        const xhr = new XMLHttpRequest();
+        xhr.open("POST", "http://127.0.0.1:5000/week3/flask", true);
+        xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+        xhr.onreadystatechange = function() {
+          if (xhr.readyState === 4 && xhr.status === 200) {
+            const result = JSON.parse(xhr.responseText).prediction;
+            document.getElementById("waistResult").innerHTML = result;
+          }
+        };
+        xhr.send(JSON.stringify(data));
+      }
+    </script>
+  </body>
+</html>

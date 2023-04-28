@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Prediction Model</title>
+  </head>
+  <body>
+    <h1>Prediction Model</h1>
+    <form id="prediction-form">
+      <label for="Chins">Chins:</label>
+      <input type="number" id="Chins" name="Chins" step="any"><br><br>
+      <label for="Situps">Situps:</label>
+      <input type="number" id="Situps" name="Situps" step="any"><br><br>
+      <label for="Jumps">Jumps:</label>
+      <input type="number" id="Jumps" name="Jumps" step="any"><br><br>
+      <button type="submit">Predict</button>
+    </form>
+    <br>
+    <div id="prediction-result"></div>
+
+    <script>
+      const form = document.getElementById("prediction-form");
+      const resultDiv = document.getElementById("prediction-result");
+
+      form.addEventListener("submit", (event) => {
+        event.preventDefault();
+        const Chins = document.getElementById("Chins").value;
+        const Situps = document.getElementById("Situps").value;
+        const Jumps = document.getElementById("Jumps").value;
+
+        const data = { "Chins": Chins, "Situps": Situps, "Jumps": Jumps };
+        const options = {
+          method: "POST",
+          body: JSON.stringify(data),
+          headers: { "Content-Type": "application/json" },
+        };
+
+        fetch("http://127.0.0.1:5000/week3/flask/", options)
+          .then(response => response.text())
+          .then(result => {
+            resultDiv.innerHTML = result;
+          })
+          .catch(error => console.log(error));
+      });
+    </script>
+  </body>
+</html>
+
