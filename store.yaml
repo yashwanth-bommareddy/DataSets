@@ -1,0 +1,21 @@
+file_type: csv
+dataset_name: file
+file_name: Journal data.csv
+table_name: edsurv
+inbound_delimiter: ","
+outbound_delimiter: "|"
+skip_leading_rows: 1
+columns: 
+    - paper_id
+    - doi
+    - body_text
+    - authors
+    - title
+    - journal
+    - abstract_summary
+    - country
+    - word_count
+    - language1
+    - publish_time
+    - processed_text
+    
